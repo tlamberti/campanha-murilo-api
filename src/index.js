@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express')
+const cors = require('cors')
 var bodyParser = require('body-parser')
 const router = express.Router();
 const server = express();
@@ -10,6 +11,16 @@ server.use(bodyParser.urlencoded({
   extended: true
 }));
 
+// Enable CORS
+server.use(function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Max-Age', 86400);
+  next();
+});
+
+server.options('*', cors());
 
 const fs = require('fs');
 const readline = require('readline');
