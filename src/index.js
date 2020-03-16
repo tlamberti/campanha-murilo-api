@@ -1,11 +1,14 @@
 'use strict';
 
-//const indexRouter = require('./routers/index.router');
 const express = require('express')
+var bodyParser = require('body-parser')
 const router = express.Router();
 const server = express();
-//server.use(indexRouter)
 
+server.use(bodyParser.json())
+server.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 
 const fs = require('fs');
@@ -15,7 +18,7 @@ const { google } = require('googleapis');
 
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
@@ -28,11 +31,6 @@ fs.readFile('credentials.json', (err, content) => {
   authorize(JSON.parse(content), listarPessoas);
 });
 
-fs.writeFile('credentials.json', (err, content) => {
-  if (err) return console.log('Error loading client secret file:', err);
-  // Authorize a client with credentials, then call the Google Sheets API.
-  authorize(JSON.parse(content), cadastrarPessoa);
-})
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -125,41 +123,48 @@ server.get('/', (req, res) => {
 });
 
 
-function cadastrarPessoa(auth) {
-  sheets.spreadsheets.values.append({
-    auth: auth,
-    range: "Comuns!A85",
-    spreadsheetId: '1ZjwUZ2QdeUcwhhAoM5wuCOGbpfPU3yj6w9dMsofG-1Y',
-    includeValuesInResponse: true,
-    insertDataOption: "INSERT_ROWS",
-    responseDateTimeRenderOption: "FORMATTED_STRING",
-    responseValueRenderOption: "UNFORMATTED_VALUE",
-    valueInputOption: "RAW",
-    resource: {
-      values: [
-        ["Teste Nome", "Teste Cel", "Teste Preenchido Por", "Teste contato"]
-      ]
-    }
-  }, function (err, response) {
-    if (err) {
-      console.log('The API returned an error: ' + err);
-      return;
-    }
-    console.log(response);
-  });
-}
-
 //Cadastrar
-server.post('/cadastro', async(req, res) => {
+server.post('/cadastro', (req, res) => {
 
+  console.log(req.body)
   let nome = req.body.nome;
   let celular = req.body.celular;
-  let escritopor = req.body.escritopor;
+  let preenchidopor = req.body.escritopor;
   let local = req.body.local;
-  let output = { };
-  res.status(200).send(
-    pessoas
-  );
+  let output = {};
+
+  fs.readFile('credentials.json', (err, content) => {
+    if (err) return console.log('Error loading client secret file:', err);
+    // Authorize a client with credentials, then call the Google Sheets API.
+    authorize(JSON.parse(content), cadastrarPessoa);
+  })
+
+  function cadastrarPessoa(auth) {
+    const sheets = google.sheets({ version: 'v4', auth });
+    sheets.spreadsheets.values.append({
+      auth: auth,
+      range: "Comuns!A2",
+      spreadsheetId: '1ZjwUZ2QdeUcwhhAoM5wuCOGbpfPU3yj6w9dMsofG-1Y',
+      includeValuesInResponse: true,
+      insertDataOption: "INSERT_ROWS",
+      responseDateTimeRenderOption: "FORMATTED_STRING",
+      responseValueRenderOption: "UNFORMATTED_VALUE",
+      valueInputOption: "RAW",
+      resource: {
+        values: [
+          [nome, celular, preenchidopor, local]
+        ]
+      }
+    }, function (err, response) {
+      if (err) {
+        'A API retornou um erro: ' + err
+        return;
+      }
+      res.status(200).send(
+        'Cadastrado com sucesso!'
+      );
+    });
+  }
 });
 
 
