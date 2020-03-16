@@ -10,7 +10,7 @@ const server = express();
 
 const fs = require('fs');
 const readline = require('readline');
-const {google} = require('googleapis');
+const { google } = require('googleapis');
 
 
 
@@ -28,6 +28,12 @@ fs.readFile('credentials.json', (err, content) => {
   authorize(JSON.parse(content), listarPessoas);
 });
 
+fs.writeFile('credentials.json', (err, content) => {
+  if (err) return console.log('Error loading client secret file:', err);
+  // Authorize a client with credentials, then call the Google Sheets API.
+  authorize(JSON.parse(content), cadastrarPessoa);
+})
+
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
  * given callback function.
@@ -35,9 +41,9 @@ fs.readFile('credentials.json', (err, content) => {
  * @param {function} callback The callback to call with the authorized client.
  */
 function authorize(credentials, callback) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed;
+  const { client_secret, client_id, redirect_uris } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
+    client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
@@ -86,7 +92,7 @@ const pessoas = [];
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
 function listarPessoas(auth) {
-  const sheets = google.sheets({version: 'v4', auth});
+  const sheets = google.sheets({ version: 'v4', auth });
   sheets.spreadsheets.values.get({
     spreadsheetId: '1ZjwUZ2QdeUcwhhAoM5wuCOGbpfPU3yj6w9dMsofG-1Y',
     range: 'Comuns!A2:C',
@@ -117,4 +123,44 @@ server.get('/', (req, res) => {
     pessoas
   );
 });
+
+
+function cadastrarPessoa(auth) {
+  sheets.spreadsheets.values.append({
+    auth: auth,
+    range: "Comuns!A85",
+    spreadsheetId: '1ZjwUZ2QdeUcwhhAoM5wuCOGbpfPU3yj6w9dMsofG-1Y',
+    includeValuesInResponse: true,
+    insertDataOption: "INSERT_ROWS",
+    responseDateTimeRenderOption: "FORMATTED_STRING",
+    responseValueRenderOption: "UNFORMATTED_VALUE",
+    valueInputOption: "RAW",
+    resource: {
+      values: [
+        ["Teste Nome", "Teste Cel", "Teste Preenchido Por", "Teste contato"]
+      ]
+    }
+  }, function (err, response) {
+    if (err) {
+      console.log('The API returned an error: ' + err);
+      return;
+    }
+    console.log(response);
+  });
+}
+
+//Cadastrar
+server.post('/cadastro', async(req, res) => {
+
+  let nome = req.body.nome;
+  let celular = req.body.celular;
+  let escritopor = req.body.escritopor;
+  let local = req.body.local;
+  let output = { };
+  res.status(200).send(
+    pessoas
+  );
+});
+
+
 server.listen(3333);
