@@ -126,7 +126,6 @@ server.get('/', (req, res) => {
 //Cadastrar
 server.post('/cadastro', (req, res) => {
 
-  console.log(req.body)
   let nome = req.body.nome;
   let celular = req.body.celular;
   let preenchidopor = req.body.escritopor;
@@ -160,6 +159,14 @@ server.post('/cadastro', (req, res) => {
         'A API retornou um erro: ' + err
         return;
       }
+      const objPessoa = {
+        nome,
+        celular,
+        preenchidopor,
+        local
+      }
+      pessoas.push(objPessoa)
+      
       res.status(200).send(
         'Cadastrado com sucesso!'
       );
