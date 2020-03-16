@@ -1,6 +1,18 @@
+'use strict';
+
+//const indexRouter = require('./routers/index.router');
+const express = require('express')
+const router = express.Router();
+const server = express();
+//server.use(indexRouter)
+
+
+
 const fs = require('fs');
 const readline = require('readline');
 const {google} = require('googleapis');
+
+
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
@@ -66,6 +78,8 @@ function getNewToken(oAuth2Client, callback) {
   });
 }
 
+const pessoas = [];
+
 /**
  * Prints the names and majors of students in a sample spreadsheet:
  * @see https://docs.google.com/spreadsheets/d/1ZjwUZ2QdeUcwhhAoM5wuCOGbpfPU3yj6w9dMsofG-1Y/edit?usp=sharing
@@ -80,13 +94,27 @@ function listarPessoas(auth) {
     if (err) return console.log('The API returned an error: ' + err);
     const rows = res.data.values;
     if (rows.length) {
-      console.log('Nome, Celular, Escrito por, Local');
+      //console.log('Nome, Celular, Escrito por, Local');
       // Print columns A and D, which correspond to indices 0 and 3.
       rows.map((row) => {
-        console.log(`${row[0]}, ${row[1]}, ${row[2]}, ${row[3]}`);
+        const obj = {
+          nome: row[0],
+          celular: row[1],
+          escritopor: row[2],
+          local: row[3]
+        }
+        pessoas.push(obj)
       });
     } else {
       console.log('No data found.');
     }
   });
 }
+
+//Exibir
+server.get('/', (req, res) => {
+  res.status(200).send(
+    pessoas
+  );
+});
+server.listen(3333);
